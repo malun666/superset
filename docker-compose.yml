@@ -88,8 +88,7 @@ services:
         required: true
       - path: docker/.env-local # optional override
         required: false
-    build:
-      <<: *common-build
+    image: superset-mssql:latest
     container_name: superset_app
     command: ["/app/docker/docker-bootstrap.sh", "app"]
     restart: unless-stopped
@@ -139,8 +138,7 @@ services:
       - REDIS_SSL=false
 
   superset-init:
-    build:
-      <<: *common-build
+    image: superset-mssql:latest
     container_name: superset_init
     command: ["/app/docker/docker-init.sh"]
     env_file:
@@ -188,8 +186,7 @@ services:
     volumes: *superset-volumes
 
   superset-worker:
-    build:
-      <<: *common-build
+    image: superset-mssql:latest
     container_name: superset_worker
     command: ["/app/docker/docker-bootstrap.sh", "worker"]
     env_file:
@@ -214,8 +211,7 @@ services:
     # mem_reservation: 128M
 
   superset-worker-beat:
-    build:
-      <<: *common-build
+    image: superset-mssql:latest
     container_name: superset_worker_beat
     command: ["/app/docker/docker-bootstrap.sh", "beat"]
     env_file:

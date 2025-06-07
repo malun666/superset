@@ -194,7 +194,8 @@ RUN /app/docker/apt-install.sh \
       libsasl2-modules-gssapi-mit \
       libpq-dev \
       libecpg-dev \
-      libldap2-dev
+      libldap2-dev \
+      freetds-dev
 
 # Copy compiled things from previous stages
 COPY --from=superset-node /app/superset/static/assets superset/static/assets
@@ -224,6 +225,9 @@ RUN --mount=type=cache,target=${SUPERSET_HOME}/.cache/uv \
 # Install the superset package
 RUN --mount=type=cache,target=${SUPERSET_HOME}/.cache/uv \
     uv pip install .
+# Install MS SQL Server driver
+RUN --mount=type=cache,target=${SUPERSET_HOME}/.cache/uv \
+    uv pip install pymssql
 RUN python -m compileall /app/superset
 
 USER superset
@@ -237,7 +241,8 @@ FROM python-common AS dev
 RUN /app/docker/apt-install.sh \
     git \
     pkg-config \
-    default-libmysqlclient-dev
+    default-libmysqlclient-dev \
+    freetds-dev
 
 # Copy development requirements and install them
 COPY requirements/*.txt requirements/
@@ -249,6 +254,9 @@ RUN --mount=type=cache,target=${SUPERSET_HOME}/.cache/uv \
     uv pip install .
 
 RUN uv pip install .[postgres]
+# Install MS SQL Server driver
+RUN --mount=type=cache,target=${SUPERSET_HOME}/.cache/uv \
+    uv pip install pymssql
 RUN python -m compileall /app/superset
 
 USER superset
