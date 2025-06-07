@@ -99,7 +99,88 @@ class CeleryConfig:
 
 CELERY_CONFIG = CeleryConfig
 
-FEATURE_FLAGS = {"ALERT_REPORTS": True}
+# ===== 嵌入功能配置 =====
+
+# 1. 启用嵌入功能
+FEATURE_FLAGS = {
+    "ALERT_REPORTS": True,
+    "EMBEDDED_SUPERSET": True,
+    "EMBEDDABLE_CHARTS": True,
+    "EMBEDDABLE_DASHBOARDS": True,
+    "DASHBOARD_NATIVE_FILTERS": True,
+    "DASHBOARD_CROSS_FILTERS": True,
+    "ENABLE_DASHBOARD_FILTERS": True,
+}
+
+# 2. HTTP 头配置 - 允许 iframe 嵌入（移除 X-Frame-Options 限制）
+# 完全禁用 Talisman 安全中间件
+TALISMAN_ENABLED = False
+
+# 另一种方法：使用环境变量控制
+import os
+os.environ.setdefault('SUPERSET_WEBSERVER_TIMEOUT', '300')
+
+# 自定义安全配置
+class CustomSecurityManager:
+    def __init__(self):
+        pass
+
+# 3. 安全头部配置 - 允许嵌入
+WTF_CSRF_SSL_STRICT = False
+WTF_CSRF_ENABLED = True
+WTF_CSRF_TIME_LIMIT = None
+
+# 4. 禁用 Frame Options 检查
+ENABLE_PROXY_FIX = True
+
+# 5. CORS 配置
+ENABLE_CORS = True
+CORS_OPTIONS = {
+    'supports_credentials': True,
+    'allow_headers': [
+        'X-CSRFToken',
+        'Content-Type',
+        'Origin',
+        'X-Requested-With',
+        'Accept',
+        'Authorization',
+        'Cache-Control',
+        'X-GuestToken'
+    ],
+    'origins': [
+        'http://localhost:3000',  # React 开发服务器
+        'http://127.0.0.1:3000',
+        'http://localhost:8088',  # Superset 本身
+        'http://127.0.0.1:8088',
+        '*'  # 开发环境允许所有来源
+    ],
+    'methods': ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
+    'resources': [
+        '/api/*', 
+        '/superset/csrf_token/', 
+        '/login/', 
+        '/logout/',
+        '/superset/dashboard/*',
+        '/superset/explore/*'
+    ],
+}
+
+# 6. 会话配置
+SECRET_KEY = os.getenv("SUPERSET_SECRET_KEY", "TEST_NON_DEV_SECRET")
+
+# 7. JWT 配置
+ENABLE_JWT_LOGIN = True
+JWT_COOKIE_NAME = "access_token"
+JWT_ACCESS_TOKEN_EXPIRES = 300  # 5 分钟
+JWT_REFRESH_TOKEN_EXPIRES = 86400  # 24 小时
+
+# 8. Guest Token 配置
+GUEST_ROLE_NAME = "Gamma"
+GUEST_TOKEN_JWT_SECRET = os.getenv("GUEST_TOKEN_JWT_SECRET", "your-secret-key-here")
+GUEST_TOKEN_JWT_ALGO = "HS256"
+GUEST_TOKEN_HEADER_NAME = "X-GuestToken"
+GUEST_TOKEN_JWT_EXP_SECONDS = 300  # 5 minutes
+
 ALERT_REPORTS_NOTIFICATION_DRY_RUN = True
 WEBDRIVER_BASEURL = f"http://superset_app{os.environ.get('SUPERSET_APP_ROOT', '/')}/"  # When using docker compose baseurl should be http://superset_nginx{ENV{BASEPATH}}/  # noqa: E501
 # The base URL for the email report hyperlinks.
@@ -136,3 +217,6 @@ try:
     )
 except ImportError:
     logger.info("Using default Docker config...")
+
+# 添加额外的嵌入配置
+PREVENT_UNSAFE_DEFAULT_URLS_ON_DATASET = False

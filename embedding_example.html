@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superset 嵌入示例</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .iframe-container {
+            margin: 20px 0;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100%;
+            border: none;
+            display: block;
+        }
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .step {
+            counter-increment: step-counter;
+            position: relative;
+        }
+        .step::before {
+            content: "步骤 " counter(step-counter) ": ";
+            font-weight: bold;
+            color: #007bff;
+        }
+        .container {
+            counter-reset: step-counter;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Superset 嵌入功能示例</h1>
+        
+        <div class="status success">
+            ✅ <strong>配置状态:</strong> Superset 嵌入功能已成功配置并启用！现在支持任何域的 iframe 嵌入！
+        </div>
+        
+        <div class="section">
+            <h2>📋 配置概览</h2>
+            <p>您的 Superset 实例已配置了以下嵌入功能：</p>
+            <ul>
+                <li>✅ 嵌入式图表 (EMBEDDABLE_CHARTS)</li>
+                <li>✅ 嵌入式仪表板 (EMBEDDABLE_DASHBOARDS)</li>
+                <li>✅ 原生过滤器 (DASHBOARD_NATIVE_FILTERS)</li>
+                <li>✅ 交叉过滤器 (DASHBOARD_CROSS_FILTERS)</li>
+                <li>✅ CORS 跨域支持</li>
+                <li>✅ JWT 认证</li>
+                <li>✅ Guest Token 支持</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2 class="step">获取 Guest Token</h2>
+            <p>在嵌入内容之前，您需要获取 Guest Token：</p>
+            
+            <div class="code-block">
+# 1. 获取 CSRF Token
+curl -c cookies.txt http://localhost:8088/api/v1/security/csrf_token/
+
+# 2. 获取 Guest Token
+curl -b cookies.txt -X POST \
+  http://localhost:8088/api/v1/security/guest_token/ \
+  -H "Content-Type: application/json" \
+  -H "X-CSRFToken: YOUR_CSRF_TOKEN" \
+  -d '{
+    "user": {"username": "guest"},
+    "resources": [{"type": "dashboard", "id": "1"}],
+    "rls": []
+  }'
+            </div>
+            
+            <button onclick="testGuestToken()">测试 Guest Token API</button>
+            <div id="token-result"></div>
+        </div>
+
+        <div class="section">
+            <h2 class="step">嵌入仪表板示例</h2>
+            <p>使用 iframe 嵌入仪表板（需要先创建仪表板）：</p>
+            
+            <div class="code-block">
+&lt;iframe
+  src="http://localhost:8088/superset/dashboard/p/1/?standalone=3&guest_token=YOUR_GUEST_TOKEN"
+  width="100%"
+  height="600"
+  frameborder="0"&gt;
+&lt;/iframe&gt;
+            </div>
+            
+            <div class="status warning">
+                ⚠️ <strong>注意:</strong> 您需要先在 Superset 中创建仪表板，然后获取其 ID 来测试嵌入功能。
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="step">嵌入图表示例</h2>
+            <p>使用 iframe 嵌入单个图表：</p>
+            
+            <div class="code-block">
+&lt;iframe
+  src="http://localhost:8088/superset/explore/p/1/?standalone=1&guest_token=YOUR_GUEST_TOKEN"
+  width="100%"
+  height="400"
+  frameborder="0"&gt;
+&lt;/iframe&gt;
+            </div>
+        </div>
+
+        <div class="section">
+            <h2 class="step">测试基本连接</h2>
+            <p>首先测试 Superset 是否正常运行：</p>
+            
+            <div class="iframe-container">
+                <iframe src="http://localhost:8088/health" height="100"></iframe>
+            </div>
+            
+            <button onclick="openSuperset()">打开 Superset 登录页面</button>
+            <button onclick="checkHealth()">检查健康状态</button>
+            <div id="health-result"></div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 故障排除</h2>
+            <div class="status info">
+                <strong>常见问题:</strong>
+                <ul>
+                    <li><strong>CORS 错误:</strong> 检查 CORS_OPTIONS 配置中的 origins 设置</li>
+                    <li><strong>✅ X-Frame-Options 错误:</strong> 已解决！X-Frame-Options 头部已被移除，支持任何域嵌入</li>
+                    <li><strong>认证失败:</strong> 验证 Guest Token 的生成和使用</li>
+                    <li><strong>404 错误:</strong> 确认仪表板或图表的 ID 是否正确</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📚 下一步</h2>
+            <ol>
+                <li>登录 Superset: <a href="http://localhost:8088" target="_blank">http://localhost:8088</a> (admin/admin)</li>
+                <li>连接您的 MS SQL Server 数据库</li>
+                <li>创建数据集和图表</li>
+                <li>创建仪表板</li>
+                <li>使用 Guest Token API 生成嵌入令牌</li>
+                <li>在您的应用中嵌入 Superset 内容</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function openSuperset() {
+            window.open('http://localhost:8088', '_blank');
+        }
+
+        async function checkHealth() {
+            const resultDiv = document.getElementById('health-result');
+            resultDiv.innerHTML = '<p>检查中...</p>';
+            
+            try {
+                const response = await fetch('http://localhost:8088/health');
+                if (response.ok) {
+                    const text = await response.text();
+                    resultDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ <strong>健康检查成功!</strong> 状态: ${response.status}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="status warning">
+                            ⚠️ <strong>健康检查失败:</strong> 状态 ${response.status}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="status warning">
+                        ❌ <strong>连接失败:</strong> ${error.message}
+                        <br>请确保 Superset 正在运行在 http://localhost:8088
+                    </div>
+                `;
+            }
+        }
+
+        async function testGuestToken() {
+            const resultDiv = document.getElementById('token-result');
+            resultDiv.innerHTML = '<p>测试中...</p>';
+            
+            try {
+                // 首先获取 CSRF Token
+                const csrfResponse = await fetch('http://localhost:8088/api/v1/security/csrf_token/', {
+                    credentials: 'include'
+                });
+                
+                if (csrfResponse.status === 401) {
+                    resultDiv.innerHTML = `
+                        <div class="status info">
+                            ℹ️ <strong>CSRF Token API 需要认证</strong>
+                            <br>这是正常的，请先登录 Superset 后再测试 Guest Token 功能。
+                            <br><a href="http://localhost:8088" target="_blank">点击这里登录 Superset</a>
+                        </div>
+                    `;
+                } else if (csrfResponse.ok) {
+                    const csrfData = await csrfResponse.json();
+                    resultDiv.innerHTML = `
+                        <div class="status success">
+                            ✅ <strong>CSRF Token 获取成功!</strong>
+                            <br>Token 长度: ${csrfData.result.length}
+                            <br>现在您可以使用此 Token 来获取 Guest Token。
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="status warning">
+                            ⚠️ <strong>CSRF Token 获取失败:</strong> 状态 ${csrfResponse.status}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="status warning">
+                        ❌ <strong>测试失败:</strong> ${error.message}
+                        <br>请确保 Superset 正在运行在 http://localhost:8088
+                    </div>
+                `;
+            }
+        }
+
+        // 页面加载时自动检查健康状态
+        window.onload = function() {
+            checkHealth();
+        };
+    </script>
+</body>
+</html> 
